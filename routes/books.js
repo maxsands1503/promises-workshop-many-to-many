@@ -16,7 +16,20 @@ function Authors() {
 }
 
 router.get('/', function(req, res, next) {
-  // your code here
+  Books().then(function(books){
+    Promise.all(
+      books.map(function(books){
+        return Authors_Books().where('book_id', books.id).pluck('author_id').then(function(authorIds){
+          return Authors().whereIn('id', authorIds).then(function(authors){
+            books.author = authors
+            return books;
+          })
+        })
+      })
+    ).then(function(authors){
+      res.render('books/index', {authors: authors})
+    })
+  })
 });
 
 router.get('/new', function(req, res, next) {
@@ -39,9 +52,16 @@ router.post('/', function (req, res, next) {
 })
 
 router.get('/:id/delete', function(req, res, next) {
-  // your code here
-  // CHECK YOUR WORK by visiting /books/406/delete
-});
+  Books().where('id', req.params.id).first().then(function (book) {
+    Authors_Books().where('book_id', book.id).pluck('author_id').then(function(aId){
+      Authors().where('id', aid).then(function(author){
+        res.render('books/delete', {author:author, book: book})
+        })
+      })
+    })
+  })
+
+
 
 router.post('/:id/delete', function(req, res, next) {
   Books().where('id', req.params.id).del().then(function (book) {
@@ -56,8 +76,14 @@ router.get('/:id/edit', function(req, res, next) {
 });
 
 router.get('/:id', function(req, res, next) {
-  // your code here
-  // CHECK YOUR WORK by visiting /books/406
+  return knex('authors').where('id', req.params.id).first().then(function(author){
+    return knex('authors_books').where('author_id', author.id).pluck('book_id').then(function(books){
+      return knex.select().from('books').whereIn('id', books).then(function(final){
+        console.log(author, final);
+        res.render('authors/show', {author:author, books:final})
+    })
+  })
+})
 });
 
 router.post('/:id', function(req, res, next) {
