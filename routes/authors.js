@@ -26,6 +26,20 @@ router.get('/', function(req, res, next) {
   // pass an array of authors to the view using locals
   // your author objects should look like this:
     // EXAMPLE: { first_name: 'Laura', last_name: 'Lou', bio: 'her bio', books: [ this should be all of her book objects ]}
+    Authors().then(function(authors){
+      Promise.all(
+        authors.map(function(author){
+          return Authors_Books().where('author_id', author.id).pluck('book_id').then(function(bookIds){
+            return Books().whereIn('id', bookIds).then(function(books){
+              author.books = books
+              return author;
+            })
+          })
+        })
+      ).then(function(authors){
+        res.render('authors/index', {authors: authors})
+      })
+    })
 });
 
 router.get('/new', function(req, res, next) {
@@ -70,6 +84,14 @@ router.get('/:id/edit', function (req, res, next) {
   // render the corresponding template
   // use locals to pass books, author, and author_books to the view
   // CHECK YOU WORK by visiting /authors/406/edit
+  return knex('authors').where('id', req.params.id).first().then(function(author){
+    return knex('authors_books').where('author_id', author.id).pluck('book_id').then(function(books){
+      return knex.select().from('books').whereIn('id', books).then(function(final){
+        console.log(author, final);
+        res.render('authors/edit', {author:author, author_books:final, books: books})
+      })
+    })
+  })
 })
 
 router.post('/:id', function (req, res, next) {
@@ -84,12 +106,13 @@ router.post('/:id', function (req, res, next) {
 })
 
 router.get('/:id', function (req, res, next) {
-  // find the author in Authors
-  // get all of the authors book_ids from Authors_Books
-  // get all of the authors books from BOOKs
-  // render the corresponding template
-  // use locals to pass books and author to the view
-  // CHECK YOU WORK by visiting /authors/406
+  return knex('authors').where('id', req.params.id).first().then(function(author){
+    return knex('authors_books').where('author_id', author.id).pluck('book_id').then(function(books){
+      return knex.select().from('books').whereIn('id', books).then(function(final){
+        console.log(author, final);
+        res.render('authors/show', {author:author, books:final})
+    })
+  })
 })
-
+});
 module.exports = router;

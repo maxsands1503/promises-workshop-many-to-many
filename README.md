@@ -30,13 +30,14 @@ Work through the following routes one by one and __in this order__.
 
 ## Authors
 
-__#1 SHOW__
+__#1 SHOW__  
+xxxxxxxxxxx
 
 1. In `authors.js`, find the `GET` route for `/:id`
 2. Implement `Promises` using the pseudo code as a guide
 
 __#2 EDIT__
-
+xxxxxx
 1. In `authors.js`, find the `GET` route for `/:id/edit`
 2. Implement `Promises` using the pseudo code as a guide
 
